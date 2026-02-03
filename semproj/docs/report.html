@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Mattia Molinari">
+<meta name="author" content="Pietro Michiardi">
+<meta name="author" content="Chao Wang">
+<meta name="author" content="Luca Nepote">
+<meta name="dcterms.date" content="2026-02-02">
+
+<title>Trajectory inference for biological processes through the lenses of unbalanced optimal transport</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ff63373b1067ca6f91cf1456aa1f00a2.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-search-results"></div>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#abstract" id="toc-abstract" class="nav-link active" data-scroll-target="#abstract">Abstract</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a>
+  <ul class="collapse">
+  <li><a href="#dynamic-unbalanced-optimal-transport" id="toc-dynamic-unbalanced-optimal-transport" class="nav-link" data-scroll-target="#dynamic-unbalanced-optimal-transport"><span class="header-section-number">1.1</span> Dynamic, Unbalanced Optimal Transport</a></li>
+  <li><a href="#tigon-framework" id="toc-tigon-framework" class="nav-link" data-scroll-target="#tigon-framework"><span class="header-section-number">1.2</span> TIGON framework</a></li>
+  </ul></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods"><span class="header-section-number">2</span> Methods</a>
+  <ul class="collapse">
+  <li><a href="#data-generation" id="toc-data-generation" class="nav-link" data-scroll-target="#data-generation"><span class="header-section-number">2.1</span> Data generation</a></li>
+  <li><a href="#model-implementation" id="toc-model-implementation" class="nav-link" data-scroll-target="#model-implementation"><span class="header-section-number">2.2</span> Model implementation</a>
+  <ul class="collapse">
+  <li><a href="#synthetic-datasets" id="toc-synthetic-datasets" class="nav-link" data-scroll-target="#synthetic-datasets"><span class="header-section-number">2.2.1</span> Synthetic datasets</a></li>
+  <li><a href="#emt-dataset" id="toc-emt-dataset" class="nav-link" data-scroll-target="#emt-dataset"><span class="header-section-number">2.2.2</span> EMT dataset</a></li>
+  </ul></li>
+  <li><a href="#evaluation-metrics" id="toc-evaluation-metrics" class="nav-link" data-scroll-target="#evaluation-metrics"><span class="header-section-number">2.3</span> Evaluation metrics</a></li>
+  </ul></li>
+  <li><a href="#sec-results" id="toc-sec-results" class="nav-link" data-scroll-target="#sec-results"><span class="header-section-number">3</span> Results</a>
+  <ul class="collapse">
+  <li><a href="#synthetic-datasets-1" id="toc-synthetic-datasets-1" class="nav-link" data-scroll-target="#synthetic-datasets-1"><span class="header-section-number">3.1</span> Synthetic datasets</a>
+  <ul class="collapse">
+  <li><a href="#balanced-datasets" id="toc-balanced-datasets" class="nav-link" data-scroll-target="#balanced-datasets"><span class="header-section-number">3.1.1</span> Balanced datasets</a></li>
+  <li><a href="#unbalanced-datasets" id="toc-unbalanced-datasets" class="nav-link" data-scroll-target="#unbalanced-datasets"><span class="header-section-number">3.1.2</span> Unbalanced datasets</a></li>
+  </ul></li>
+  <li><a href="#emt-dataset-1" id="toc-emt-dataset-1" class="nav-link" data-scroll-target="#emt-dataset-1"><span class="header-section-number">3.2</span> EMT dataset</a></li>
+  </ul></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion"><span class="header-section-number">4</span> Discussion</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix">Appendix</a>
+  <ul class="collapse">
+  <li><a href="#additional-figures" id="toc-additional-figures" class="nav-link" data-scroll-target="#additional-figures">Additional Figures</a></li>
+  <li><a href="#evaluation-metrics-tables" id="toc-evaluation-metrics-tables" class="nav-link" data-scroll-target="#evaluation-metrics-tables">Evaluation metrics tables</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="report.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Trajectory inference for biological processes through the lenses of unbalanced optimal transport</h1>
+<p class="subtitle lead">Semester Project - EURECOM</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Mattia Molinari </p>
+             <p>Pietro Michiardi </p>
+             <p>Chao Wang </p>
+             <p>Luca Nepote </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 2, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="abstract" class="level1 unnumbered">
+<h1 class="unnumbered">Abstract</h1>
+<p>The estimation of cellular dynamics is a challenging task in computational biology: TIGON is a recently proposed deep learning-based framework that leverages optimal transport to reconstruct cellular trajectories, velocities, and growth rates. The aim of this project is to test the TIGON framework for multi-marginal trajectory inference in high-dimensional, dynamic, balanced and unbalanced OT problems.</p>
+</section>
+<section id="introduction" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
+<p>Time-series single-cell RNA sequencing (scRNA-seq) has revolutionized the study of dynamic cellular systems by providing high-resolution snapshots of gene expression <span class="citation" data-cites="klein">(<a href="#ref-klein" role="doc-biblioref">Klein et al. 2015</a>)</span>. However, a fundamental limitation of this technology is its destructive nature; cells are destroyed during sequencing, resulting in unpaired snapshots rather than continuous time-lapse data. Consequently, reconstructing dynamic processes, specifically the lineage relationships (trajectories), instantaneous change in gene expression over time (velocity) and the rates of cell division or death (growth), remains a significant computational challenge. While optimal transport (OT) theory has been successfully applied to infer these trajectories, standard approaches often assume mass conservation (balanced OT), failing to account for the varying population growth and death rates inherent in biological development.</p>
+<p>In this context, TrajectoryNet is the first method to leverage growth and death by incorporating it as a separable discrete statics unbalanced OT problem in the continuous setting <span class="citation" data-cites="tong">(<a href="#ref-tong" role="doc-biblioref">Tong et al. 2020</a>)</span>. Despite this advance, models considering both velocity of each cell and cell population growth simultaneously are still lacking. To address this limitation, Sha et al.&nbsp;propose TIGON (Trajectory Inference with Growth via Optimal transport and Neural network), a deep learning-based framework that implements dynamic, unbalanced optimal transport to simultaneously reconstruct cellular dynamics by connecting unpaired time-series single-cell transcriptomics data <span class="citation" data-cites="sha">(<a href="#ref-sha" role="doc-biblioref">Sha et al. 2024</a>)</span>.</p>
+<section id="dynamic-unbalanced-optimal-transport" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="dynamic-unbalanced-optimal-transport"><span class="header-section-number">1.1</span> Dynamic, Unbalanced Optimal Transport</h2>
+<p>OT provides a mathematical framework to model the movement of mass (e.g., cell populations) from one distribution to another while minimizing a cost function. In the context of single-cell transcriptomics, OT can be used to infer the most likely trajectories of cells over time based on their gene expression profiles. Dynamic OT extends this framework by considering the temporal evolution of cell populations, allowing for the modeling of continuous changes in gene expression. Specifically, the Bernamou-Brenier formulation of dynamic OT defines the problem as finding a velocity field that transports an initial distribution to a final distribution over a specified time interval while minimizing the kinetic energy of the transport. This is mathematically expressed utilizing the continuity equation of fluid dynamics:</p>
+<p><span class="math display">\[
+\frac{\partial \rho}{\partial t} + \nabla \cdot (\mathbf{v} \rho) = 0
+\]</span></p>
+<p>where <span class="math inline">\(\rho(x,t)\)</span> is the cell density at gene expression state <span class="math inline">\(x \in \mathbb{R}^d\)</span> and time <span class="math inline">\(t\)</span>, while <span class="math inline">\(\mathbf{v}(x,t)\)</span> is the velocity field representing the instantaneous change in gene expression. Considering a square Euclidean cost function, solving the problem corresponds to minimizing the Wasserstein distance with <span class="math inline">\(p=2\)</span>:</p>
+<p><span class="math display">\[
+W_{0, T} = T \int_0^T \int_{\mathbb{R}^d} \|\mathbf{v}(x,t)\|^2 \rho(x,t) dx dt
+\]</span></p>
+<p>subject to the continuity equation and the boundary conditions <span class="math inline">\(\rho(\cdot,0) = \rho_0\)</span> and <span class="math inline">\(\rho(\cdot,T) = \rho_T\)</span>.</p>
+<p>Unbalanced OT further generalizes the OT framework by allowing for the creation and destruction of mass, which is particularly relevant in biological systems where cell populations can grow or shrink over time. This is achieved by introducing a growth term into the OT formulation, enabling the model to account for instantaneous variations in population sizes. The growth-augmented continuity equation is given by:</p>
+<p><span id="eq-continuity"><span class="math display">\[
+\frac{\partial \rho}{\partial t} + \nabla \cdot (\mathbf{v} \rho) = g \rho
+\tag{1}\]</span></span></p>
+<p>where <span class="math inline">\(g(x,t)\)</span> represents the growth rate field. On the other hand, the cost function is modified to combine the quadratic Wasserstein and Fisher-Rao metrics simultaneously and can be expressed as:</p>
+<p><span id="eq-WFR"><span class="math display">\[
+W_{0, T} = T \int_0^T \int_{\mathbb{R}^d} \left( \|\mathbf{v}\|^2 + \alpha |g|^2 \right) \rho dx dt
+\tag{2}\]</span></span></p>
+<p>where <span class="math inline">\(\alpha\)</span> is a regularization parameter balancing the transport cost and growth penalty <span class="citation" data-cites="chizat">(<a href="#ref-chizat" role="doc-biblioref">Chizat et al. 2018</a>)</span>.</p>
+</section>
+<section id="tigon-framework" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="tigon-framework"><span class="header-section-number">1.2</span> TIGON framework</h2>
+<p>TIGON objective is to find the velocity and growth rate fields that optimize the total transport cost, while satisfying the growth-augmented continuity condition (<a href="#eq-continuity" class="quarto-xref">Equation&nbsp;1</a>) and matching the observed cell distributions at different time points. The model uniqueness relies in its mesh-free, dimensionless formulation of dynamic, unbalanced OT, which is achieved in two main steps: firstly, the velocity and growth are parametrized by neural networks while the continuity equation is converted into a system of neural ordinary differential equations (ODEs); secondly, it derives an equivalent dimensionless formulation of the Wasserstein-Fisher-Rao (WFR) distance (<a href="#eq-WFR" class="quarto-xref">Equation&nbsp;2</a>).</p>
+<p>TIGON receives as input a timeseries of sets of independent and identically distributed (i.i.d.) samples representing cell populations at discrete time points: to estimate the continuos underlying cell density, a Gaussian mixture model (GMM) combines Gaussian distributions centered in each sample with covariance matrix proportional to the identity scaled by a standard deviation <span class="math inline">\(\sigma\)</span>, which is progressively reduced during training to refine the density estimation.</p>
+<p>Given this setup, the model needs to minimize the reconstruction error between the predicted and observed cell densities. Since ground truths at a different time point from the current are missing, TIGON integrates backward in time though the neural ODEs and forwards in time via the ODE solver to calculate the estimated density. Comparing the predicted densities with the empirical ones at each time point allows to compute the reconstruction error: this is characterized as short-term and long-term, depending whether integration is performed with respect to the previous time point or the initial time point, respectively. The loss function optimized consists of two components:</p>
+<p><span class="math display">\[
+\mathcal{L} = W + \lambda_d R
+\]</span></p>
+<p>where <span class="math inline">\(W\)</span> is the WFR metric computed summing up the cost between all pairs of consecutive time points (i.e., <span class="math inline">\(W = \sum_{i} W_{t_i, t_{i+1}}\)</span>), <span class="math inline">\(R\)</span> is the reconstruction error combining both short-term and long-term errors, and <span class="math inline">\(\lambda_d\)</span> is a hyperparameter controlling the relative importance of the two terms.</p>
+</section>
+</section>
+<section id="methods" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Methods</h1>
+<section id="data-generation" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="data-generation"><span class="header-section-number">2.1</span> Data generation</h2>
+<p>The synthetic datasets were generated by simulating the evolution of cell populations in a <span class="math inline">\(d\)</span>-dimensional gene expression space. The datasets consist of multiple clusters representing the cell populations evolving according to unknown velocity and growth fields at discrete time points; since the original work affirms the effectiveness of TIGON in reconstructing trajectories in dimensions up to 10 without dimensionality reduction techniques, the focus was on 2D, 5D and 10D datasets. Each cluster consists in a Gaussian distribution of less than 1000 samples, depending on the dimensionality and the balanced or unbalanced nature of the scenario; the only exception are the two balanced datasets with bifurcation, where some cluster are the combination of two Gaussians to simulate branching trajectories. The sample values were chosen to ensure sufficient representation of the cell populations while maintaining computational feasibility.</p>
+<p>For each dimension, both single-marginal (two time points) and multi-marginal (more than two time points) datasets were created, with balanced and unbalanced scenarios. It is worth mentioning that, for multi-marginal datasets, the distributions were not aligned along certain dimensions, introducing additional complexity in trajectory inference and testing the model’s robustness. <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a> summarizes the characteristics of the generated datasets.</p>
+<div id="tbl-datasets" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-datasets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Summary of synthetic datasets generated. Note that datasets 8 and 9 differs only in the relative position of the Gaussian clusters, while 2 and 7 are the only dataset with bifurcation.
+</figcaption>
+<div aria-describedby="tbl-datasets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;"></th>
+<th style="text-align: center;">Dimensions</th>
+<th style="text-align: center;">Marginals</th>
+<th style="text-align: center;">Type</th>
+<th style="text-align: center;">Time Points</th>
+<th style="text-align: left;">Samples per Time Point</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">Single</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Unbalanced</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: left;">750, 600, 380, 240, 520</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">Single</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">6</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">7</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">8</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Unbalanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">600, 750, 380</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">9</td>
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Unbalanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">380, 600, 750</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">Single</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">500</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">11</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Balanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">1000</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">Multi</td>
+<td style="text-align: center;">Unbalanced</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">1200, 1500, 780</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>In addition, the EMT dataset from the original TIGON paper was included for comparison. This dataset is particularly relevant not only because it represents a real biological process, but also because it involves significant challenges due to the proximity of the cell states. As such, it serves as a critical benchmark for evaluating the performance of the TIGON framework in capturing real complex cellular dynamics.</p>
+</section>
+<section id="model-implementation" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="model-implementation"><span class="header-section-number">2.2</span> Model implementation</h2>
+<p>The TIGON framework was tailored to handle both balanced and unbalanced OT problems: for the first case, the neural network predicting the growth rate field was disabled and the continuity equation simplified to its standard form, effectively reducing the model to a dynamic OT setting. This clearly affects the loss function, where the WFR metric reduces to the quadratic Wasserstein distance: for simplicity, in both cases it is referred to as WFR.</p>
+<section id="synthetic-datasets" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="synthetic-datasets"><span class="header-section-number">2.2.1</span> Synthetic datasets</h3>
+<p>Training was performed on 5000 epochs, with a learning rate of 0.003 and a sample size of 1000. The velocity network consisted of 3 hidden layers of dimension 16, while the growth network (when applicable) had 2 hidden layers of dimension 16. These values were chosen based on the original work experiments, specifically on the Simulated data and the EMT datasets, to ensure sufficient model capacity without overfitting or excessive computational cost.</p>
+<p>The hyperparameters that needed the most attention were the error balancing constant <span class="math inline">\(\lambda_d\)</span> and the standard deviation <span class="math inline">\(\sigma\)</span> for the GMM density estimation, in combination with its progressive reduction schedule during training. <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> summarizes the best values observed for each dataset: the reasoning behind this was supported by both theoretical and empirical considerations, highlighting the challenges posed by high-dimensional data in density estimation and loss balancing, as discussed in <a href="#sec-results" class="quarto-xref">Section&nbsp;3</a>. It was also taken into consideration to incorporate a different value of the hyperparameter <span class="math inline">\(\lambda_d\)</span> between short-term and long-term reconstruction errors, allowing to weigh their contributions separately during training: however, this modification was not necessary, as it was never observed a case where the two errors were unbalanced enough to justify this approach.</p>
+<p>Tuning the value of <span class="math inline">\(\alpha\)</span> in the WFR cost function was deemed unnecessary, as the original work reported robust performance across various settings without adjusting this parameter, thus it was kept at its default value of 1. The value of the standard deviation <span class="math inline">\(\sigma\)</span> for the GMM density estimation had to be adjusted according to the data dimension to ensure a proper density approximation, with higher dimensions requiring larger <span class="math inline">\(\sigma\)</span> values; additionally, the progressive reduction schedule during training was modified accordingly, with smaller decrements for higher dimensions to avoid abrupt changes.</p>
+<div id="tbl-lambda_sigma" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-lambda_sigma-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Best values of lambda, sigma and its update schedule used for each scenario. For the latter, the entry indicates the multiplication factor applied at each scheduled update.
+</figcaption>
+<div aria-describedby="tbl-lambda_sigma-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Datasets</th>
+<th style="text-align: center;"><span class="math inline">\(\sigma\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(\sigma\)</span> update</th>
+<th style="text-align: center;"><span class="math inline">\(\lambda\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Balanced 2D</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.5\)</span></td>
+<td style="text-align: center;">1e4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Balanced 2D multi-marginal</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.5\)</span></td>
+<td style="text-align: center;">1e5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Unbalanced 2D multi-marginal</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.5\)</span></td>
+<td style="text-align: center;">1e5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Balanced 5D</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.9\)</span></td>
+<td style="text-align: center;">1e8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Balanced 5D multi-marginal</strong></td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.9\)</span></td>
+<td style="text-align: center;">1e10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Unbalanced 5D multi-marginal</strong></td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.9\)</span></td>
+<td style="text-align: center;">1e12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Balanced 10D</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.9\)</span></td>
+<td style="text-align: center;">1e20</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Balanced 10D multi-marginal</strong></td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;"><span class="math inline">\(\times 0.9\)</span></td>
+<td style="text-align: center;">1e22</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+</section>
+<section id="emt-dataset" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="emt-dataset"><span class="header-section-number">2.2.2</span> EMT dataset</h3>
+<p>For the EMT dataset, training was conducted with the same configuration proposed in the original paper, consisting of 4 hidden layers of dimension 16 for the velocity network and 2 hidden layers of dimension 16 for the growth network; the learning rate was set to 0.003, with a sample size of 100 and training over 5000 epochs. The standard deviation <span class="math inline">\(\sigma\)</span> was initialized at 0.03 and progressively reduced by a factor of 0.5 during training, while the hyperparameter <span class="math inline">\(\lambda_d\)</span> was set to 1e4, as suggested in the original work.</p>
+</section>
+</section>
+<section id="evaluation-metrics" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="evaluation-metrics"><span class="header-section-number">2.3</span> Evaluation metrics</h2>
+<p>The evaluation consider the accuracy of the reconstructed trajectories comparing out-of-sample cell distributions and predicted ones at various time points. Specifically, trajectories were reconstructed from the final time point back to the initial one, as implemented in the original work. To assess the performance of TIGON several distance metrics were employed:</p>
+<ul>
+<li><p>Quadratic Wasserstein distance (<span class="math inline">\(W_2\)</span>): measures the optimal transport cost between the predicted and true cell distributions at each time point. It is defined as: <span class="math display">\[
+  W_2(\rho, \mu) = \inf_{\gamma \in \Pi(\rho, \mu)} (\mathbb{E}_{(x, y) \sim \gamma} \|x - y\|^2)^\frac{1}{2}
+  \]</span> where <span class="math inline">\(\Pi(\rho, \mu)\)</span> is the set of all joint distributions with marginals <span class="math inline">\(\rho\)</span> and <span class="math inline">\(\mu\)</span> (i.e.&nbsp;couplings).</p></li>
+<li><p>Earth Mover’s Distance (EMD): also known as 1-Wasserstein distance, it quantifies the minimum cost of transforming one distribution into another, providing insight into the overall distributional similarity. It is defined as: <span class="math display">\[
+  EMD(\rho, \mu) = \inf_{\gamma \in \Pi(\rho, \mu)} \mathbb{E}_{(x, y) \sim \gamma} \|x - y\|.
+  \]</span></p></li>
+<li><p>Maximum Mean Discrepancy (MMD): evaluates the difference between the predicted and true distributions by comparing their moments in a reproducing kernel Hilbert space. It is defined as: <span class="math display">\[
+  MMD(\rho, \mu) = \mathbb{E}_{x, x' \sim \rho}[k(x, x')] + \mathbb{E}_{y, y' \sim \mu}[k(y, y')] - 2\mathbb{E}_{x \sim \rho, y \sim \mu}[k(x, y)]
+  \]</span> where <span class="math inline">\(k\)</span> is the Gaussian RBF kernel.</p></li>
+</ul>
+<p>For each cluster, these metrics were computed on 100 unseen samples; this value was chosen to balance computational complexity and statistical reliability, since it covers at least 10% of the samples at a given time point depending on the dataset.</p>
+<p>In addition, for bifurcating datasets only, the Fate Probability Accuracy (FPA) was considered: this assesses the model’s ability to predict the likelihood of cells transitioning to specific states over time, making it relevant for processes involving multiple lineages. The basic idea is that, since the model infers unique trajectories for samples drawn from the initial distribution, it is possible to compute the probability of cells committing to a specific state. Specifically, given a sample drawn from the initial distribution <span class="math inline">\(x_0 \sim \rho_0\)</span>, it is propagated through the learned dynamics to the final time <span class="math inline">\(T\)</span> with <span class="math inline">\(\hat{x}_T = x_0 + \int_0^T \mathbf{v} dt\)</span>; then, considering terminal distributions <span class="math inline">\(\{\rho^1_T, \dots, \rho^n_T\}\)</span> associated with different lineages, the cell’s Fate Probability of committing to one of them is:</p>
+<p><span id="eq-fp"><span class="math display">\[
+FP_{\rho^i_T} (\hat{x}_T) = \frac{\rho^i_T(\hat{x}_T)}{\sum_{j=1}^n \rho^j_T(\hat{x}_T)}
+\tag{3}\]</span></span></p>
+<p>with <span class="math inline">\(n=2\)</span> in our case. In consequence, the Fate Probability Accuracy is assessed in two steps:</p>
+<ul>
+<li><p>for each point, the Fate Probability with respect to each terminal state must be as close as possible either to 0 or 1. This represents commitment, and it is evaluated as the mean squared error between the difference of predicted fate probabilities and the true difference (i.e.&nbsp;1) for each point with respect to all terminal states. <span class="math display">\[
+  FPA_1(\theta_T, \mu_T) = \frac{1}{|\hat{X}_T |} \sum_{\hat{x}_T \in \hat{X}_T} \left( |FP_{\theta_T}(\hat{x}_T) - FP_{\mu_T}(\hat{x}_T)| - 1 \right)^2
+  \]</span></p></li>
+<li><p>for each terminal state, the number of points committing to it must be proportionate to its relative mass in the terminal distribution. This represent correct inference of dynamics, and it is evaluated as the mean squared error between the average predicted fate probability and the relative mass for each terminal state. <span class="math display">\[
+  FPA_2({\rho^i_T}) = \frac{1}{|\{\rho^i_T\}|} \sum_{j=1}^n \left( \frac{1}{|\hat{X}_T|} \sum_{\hat{x}_T \in \hat{X}_T} FP_{\rho^i_T}(\hat{x}_T) - FP^{true}_{\rho^i_T} \right)^2
+  \]</span></p></li>
+</ul>
+<p>As for the previous metrics, 100 unseen samples were used, while terminal distributions were defined as Gaussian mixtures centered on the final clusters with covariance matrix proportional to the identity scaled by 0.025. The combination of these metrics provides a comprehensive assessment of the model’s ability to accurately capture the underlying dynamics of the processes.</p>
+</section>
+</section>
+<section id="sec-results" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Results</h1>
+<section id="synthetic-datasets-1" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="synthetic-datasets-1"><span class="header-section-number">3.1</span> Synthetic datasets</h2>
+<section id="balanced-datasets" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="balanced-datasets"><span class="header-section-number">3.1.1</span> Balanced datasets</h3>
+<section id="d-datasets" class="level4" data-number="3.1.1.1">
+<h4 data-number="3.1.1.1" class="anchored" data-anchor-id="d-datasets"><span class="header-section-number">3.1.1.1</span> 2D datasets</h4>
+<p>TIGON performance on 2-dimensional balanced datasets was satisfactory, with accurate trajectory reconstructions without the need for extensive hyperparameter tuning. The change from single-marginal to multi-marginal settings required a slight increase in the balancing constant <span class="math inline">\(\lambda_d\)</span> to emphasize the reconstruction error, but did not significantly affect the model’s capability, with overall low values across all evaluation metrics. The bifurcating dataset did not pose additional challenges, with the model effectively capturing the branching trajectories and maintaining satisfying values in the Fate Probability Accuracy metric.</p>
+</section>
+<section id="d-datasets-1" class="level4" data-number="3.1.1.2">
+<h4 data-number="3.1.1.2" class="anchored" data-anchor-id="d-datasets-1"><span class="header-section-number">3.1.1.2</span> 5D datasets</h4>
+<p>Increasing the dimensionality to 5D introduced challenges in both error and density estimation due to the curse of dimensionality. For the single-marginal case, the default value of <span class="math inline">\(\lambda_d\)</span> proved to be insufficient, with the model being unable to reconstruct the trajectories. More precisely, there was no movement in the predicted cell distributions over time (<a href="#fig-samples_Gaussian5D_baseline" class="quarto-xref">Figure&nbsp;16</a>), indicating that the model prioritized minimizing the WFR cost over the reconstruction error; this was confirmed observing the loss components during training, where the WFR term approached zero while the reconstruction error remained high. To balance the loss components effectively, <span class="math inline">\(\lambda_d\)</span> had to be increased significantly, reaching values up to 1e8. Additionally, abrupt spikes in the loss during training were observed in proximity to the standard deviation updates, indicating instability in density estimation: to mitigate this, a more gradual reduction schedule for <span class="math inline">\(\sigma\)</span> was implemented for higher dimensions, with smaller decrements to ensure smoother transitions.</p>
+<p>Switching to the multi-marginal settings further complicated the previous aspects. After an initial inability to displace distributions with the previous setting, increasing <span class="math inline">\(\lambda_d\)</span> to 1e18 allowed the model effectively prioritize mass movement, however in a completely erroneous direction, as shown in <a href="#fig-trajectories_Gaussian5D-multimarginal2Tdiff_baseline" class="quarto-xref">Figure&nbsp;22</a>. Observing the values of reconstruction errors for the three time points, it was evident that the model prioritized one time point over the others; to address this, a different approach was adopted, increasing the the value of the standard deviation <span class="math inline">\(\sigma\)</span> to 10, which improved the density approximation in the high-dimensional space. As a matter of fact, in high-dimensional spaces, density estimation becomes increasingly challenging due to the sparsity of data points: larger values of <span class="math inline">\(\sigma\)</span> help to create a smoother density estimate by broadening the influence of each data point, which is crucial for effective training; without this adjustment, the model struggled to find the correct directions for mass transport, leading to completely inaccurate trajectory reconstructions.</p>
+<p>However, increasing <span class="math inline">\(\sigma\)</span> and smoothening the density estimation also implies a decrease in reconstruction error: in consequence, an increase in <span class="math inline">\(\lambda_d\)</span> is still necessary with respect to the single-marginal case, but 1e10 proved to be sufficient. This configuration yielded better results, with accurate trajectory reconstructions and reasonable evaluation metrics across all time points (<a href="#fig-trajectories_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510" class="quarto-xref">Figure&nbsp;24</a>).</p>
+<p>Finally, for the bifurcating dataset the same setting was used, achieving satisfactory distance metrics without further adjustments. However, the Fate Probability Accuracy did not reflect these results: the metrics values were infinity, implying that the denominator of <a href="#eq-fp" class="quarto-xref">Equation&nbsp;3</a> and the Fate Probability for all terminal states were close to zero. This means that the model struggles with forward inference more than backward inference, computing trajectories for initial points that do not commit to an existent lineage; this intuition is proven comparing ground truth and predicted terminal data points for this evaluation case (<a href="#fig-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-xref">Figure&nbsp;28</a>). To achieve finite FPA results it was chosen to assign value zero to Fate Probability with null denominator, with final metrics in <a href="#tbl-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-xref">Table&nbsp;13</a>.</p>
+</section>
+<section id="d-datasets-2" class="level4" data-number="3.1.1.3">
+<h4 data-number="3.1.1.3" class="anchored" data-anchor-id="d-datasets-2"><span class="header-section-number">3.1.1.3</span> 10D datasets</h4>
+<p>The same reasoning applied to the previous case was necessary for the 10D datasets, with even more pronounced effects due to the increased dimensionality. Specifically, sigma was set to 10 while lambda was further increased to 1e20 and 1e22 for single-marginal and multi-marginal cases, respectively. With these settings, TIGON was able to reconstruct the trajectories with reasonable accuracy.</p>
+</section>
+</section>
+<section id="unbalanced-datasets" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="unbalanced-datasets"><span class="header-section-number">3.1.2</span> Unbalanced datasets</h3>
+<section id="sec-unbalanced" class="level4" data-number="3.1.2.1">
+<h4 data-number="3.1.2.1" class="anchored" data-anchor-id="sec-unbalanced"><span class="header-section-number">3.1.2.1</span> 2D datasets</h4>
+<p>TIGON demonstrated robust performance on 2-dimensional unbalanced datasets, correctly reconstructing trajectories while accounting for growth. The hyperparameter tuning followed a the same pattern observed in the balanced case. To get a better comparison and understanding of the model’s need for the growth component and assess its impact, the model was also trained on this unbalanced dataset disabling the growth network, as in the balanced OT setting: this resulted in poor probability distributions reconstructions, which tended to concentrate mass in the center of the real distributions. Analyzing the model performance at different epochs, this behavior emerged in the second half of the training, when the WFR cost slightly increased while the reconstruction error barely decreased. It is probable that the model, unable to account for the varying population sizes due to the absence of the growth term, compensate using this false transition strategy to minimize the loss, specifically the reconstruction error while barely affecting the WFR cost. This problem was also highlighted in the original work, where the authors reported similar findings.</p>
+</section>
+<section id="d-datasets-3" class="level4" data-number="3.1.2.2">
+<h4 data-number="3.1.2.2" class="anchored" data-anchor-id="d-datasets-3"><span class="header-section-number">3.1.2.2</span> 5D datasets</h4>
+<p>The challenges encountered in the balanced 5D datasets were further exacerbated in the unbalanced setting. Specifically, the model presented a similar behavior as the growth-disabled implementation on an unbalanced dataset of Section <a href="#sec-unbalanced" class="quarto-xref">Section&nbsp;3.1.2.1</a>: after a certain epoch in training, the predicted cell distributions ceased to move in the gene expression space, despite being still distant from the true distributions (<a href="#fig-samples_Gaussian5D-multimarginal2T-growth_baseline" class="quarto-xref">Figure&nbsp;30</a>); instead, it started to flatten along a dimension and spread close to the edges of the true distributions, as if it was trying to minimize the reconstruction error without effectively transporting mass. This behavior was noticed in both datasets, regardless of the relative position of the Gaussian clusters and the number of samples at each time point.</p>
+<p>Since in the unbalanced OT setting the value of <span class="math inline">\(\sigma\)</span> was fundamental for a proper density estimation in high-dimensional spaces, it was hypothesized that its scheduling was still too fast and aggressive, leading to spikes in reconstruction error and stagnation of the model as in the balanced case. To investigate this, a series of experiments were conducted varying the reduction factor of <span class="math inline">\(\sigma\)</span> while keeping <span class="math inline">\(\lambda_d\)</span> constant at 1e14 to account for more extended smoothening. However, this did not yield significant improvements, as the model still exhibited stagnation after a certain epoch. Generally, a more gentle scheduling of <span class="math inline">\(\sigma\)</span> led to slightly better results for all time points besides the initial one, which was slightly worse, but the overall performance remained suboptimal (<a href="#fig-samples_Gaussian5D-multimarginal2T-growth_stop-4167" class="quarto-xref">Figure&nbsp;32</a>).</p>
+</section>
+<section id="d-datasets-4" class="level4" data-number="3.1.2.3">
+<h4 data-number="3.1.2.3" class="anchored" data-anchor-id="d-datasets-4"><span class="header-section-number">3.1.2.3</span> 10D datasets</h4>
+<p>The unbalanced 10D dataset presented similar challenges as the 5D case, with the model struggling to effectively reconstruct trajectories. Adjustments to <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\lambda_d\)</span> were made, setting them to 10 and 1e24, respectively, to enhance density estimation and balance the loss components. Despite these efforts, the model still exhibited stagnation during training, indicating that the complexities of high-dimensional unbalanced OT problems remain a significant challenge.</p>
+</section>
+</section>
+</section>
+<section id="emt-dataset-1" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="emt-dataset-1"><span class="header-section-number">3.2</span> EMT dataset</h2>
+<p>The results obtained on the EMT dataset were consistent with those reported in the original TIGON paper. TIGON effectively reconstructed the cellular trajectories: the evaluation metrics indicated a good match between the predicted and true cell distributions over time.</p>
+</section>
+</section>
+<section id="discussion" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Discussion</h1>
+<p>The experiments conducted on synthetic datasets of varying dimensions and configurations provided valuable insights into the performance and limitations of the TIGON framework for trajectory inference using dynamic, unbalanced optimal transport. In lower-dimensional settings (2D), TIGON demonstrated robust performance, accurately reconstructing trajectories in both balanced and unbalanced scenarios. However, as the dimensionality increased (5D and 10D), several challenges emerged, primarily related to density estimation and loss balancing. The curse of dimensionality significantly impacted the model’s ability to estimate cell densities accurately, necessitating larger values of the standard deviation <span class="math inline">\(\sigma\)</span> in the Gaussian mixture model. This adjustment helped to smoothen the density estimates, which is crucial for effective training in high-dimensional spaces.</p>
+<p>Additionally, the balancing constant <span class="math inline">\(\lambda_d\)</span> required substantial increases to ensure that the reconstruction error was adequately prioritized during training. Despite these adjustments, the model exhibited stagnation during training in high-dimensional unbalanced OT problems, indicating that further refinements are needed to address the complexities of growth dynamics and the interplay between velocity and growth networks. Future work could explore alternative density estimation techniques, more sophisticated neural network architectures, or advanced optimization strategies to enhance the model’s capability in high-dimensional settings. Overall, while TIGON shows promise for trajectory inference in single-cell transcriptomics, addressing the challenges identified in this study is essential for its broader applicability.</p>
+</section>
+<section id="references" class="level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-chizat" class="csl-entry" role="listitem">
+Chizat, Lénaïc, Gabriel Peyré, Bernhard Schmitzer, and François-Xavier Vialard. 2018. <span>“Unbalanced Optimal Transport: Dynamic and Kantorovich Formulations.”</span> <em>Journal of Functional Analysis</em>. https://doi.org/<a href="https://doi.org/10.1016/j.jfa.2018.03.008">https://doi.org/10.1016/j.jfa.2018.03.008</a>.
+</div>
+<div id="ref-klein" class="csl-entry" role="listitem">
+Klein, Allon M., Linas Mazutis, Ilke Akartuna, Naren Tallapragada, Adrian Veres, Victor Li, Leonid Peshkin, David A. Weitz, and Marc W. Kirschner. 2015. <span>“Droplet Barcoding for Single-Cell Transcriptomics Applied to Embryonic Stem Cells.”</span> <em>Cell</em>. https://doi.org/<a href="https://doi.org/10.1016/j.cell.2015.04.044">https://doi.org/10.1016/j.cell.2015.04.044</a>.
+</div>
+<div id="ref-sha" class="csl-entry" role="listitem">
+Sha, Yuling, Yifan Qiu, Peng Zhou, Yanni Wang, Guoji Guo, Yujia Li, Anima Singh, Pradeep Ravikumar, and Yujia Xie. 2024. <span>“Reconstructing Growth and Dynamic Trajectories from Single-Cell Transcriptomics Data.”</span> <em>Nature Machine Intelligence</em>. Nature Publishing Group.
+</div>
+<div id="ref-tong" class="csl-entry" role="listitem">
+Tong, Alexander, Jessie Huang, Guy Wolf, David van Dijk, and Smita Krishnaswamy. 2020. <span>“TrajectoryNet: A Dynamic Optimal Transport Network for Modeling Cellular Dynamics.”</span> <a href="https://arxiv.org/abs/2002.04461">https://arxiv.org/abs/2002.04461</a>.
+</div>
+</div>
+</section>
+<section id="appendix" class="level1 unnumbered">
+<h1 class="unnumbered">Appendix</h1>
+<section id="additional-figures" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="additional-figures">Additional Figures</h2>
+<div id="fig-data_Gaussian2D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Balanced 2D single: dataset 1 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian2D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Inferred distributions for dataset 1, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian2D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Inferred trajectories for dataset 1, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian2D-multimarginal4T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-bifurcation_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Balanced 2D multi (bifurcation): dataset 2 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian2D-multimarginal4T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-bifurcation_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Inferred distributions for dataset 2, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian2D-multimarginal4T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-bifurcation_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Inferred trajectories for dataset 2, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian2D-multimarginal4T_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Balanced 2D multi (no bifurcation): dataset 3 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian2D-multimarginal4T_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Inferred distributions for dataset 3, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian2D-multimarginal4T_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Inferred trajectories for dataset 3, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian2D-multimarginal4T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-growth_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Unbalanced 2D multi: dataset 4 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian2D-multimarginal4T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-growth_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Inferred distributions for dataset 4, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> and growth enabled.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian2D-multimarginal4T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-growth_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: Inferred trajectories for dataset 4, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> and growth enabled.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian2D-multimarginal4T-growth_no-growth" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian2D-multimarginal4T-growth_no-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-growth_no-growth_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian2D-multimarginal4T-growth_no-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: Inferred distributions for dataset 4, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> and growth disabled.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian2D-multimarginal4T-growth_no-growth" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian2D-multimarginal4T-growth_no-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian2D-multimarginal4T-growth_no-growth_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian2D-multimarginal4T-growth_no-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Inferred trajectories for dataset 4, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> and growth disabled.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian5D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: Balanced 5D single: dataset 5 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16: Inferred distributions for dataset 5, with default configuration.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17: Inferred trajectories for dataset 5, with default configuration.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D_lambda" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D_lambda_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18: Inferred distributions for dataset 5, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D_lambda" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D_lambda_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;19: Inferred trajectories for dataset 5, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian5D-multimarginal2Tdiff_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2Tdiff_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20: Balanced 5D multi: dataset 6 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D-multimarginal2Tdiff_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2Tdiff_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;21: Inferred distributions for dataset 6, with <span class="math inline">\(\lambda = 1e18\)</span>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D-multimarginal2Tdiff_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2Tdiff_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22: Inferred trajectories for dataset 6, with <span class="math inline">\(\lambda = 1e18\)</span>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2Tdiff_sigma&amp;lambda-split-2510_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;23: Inferred distributions for dataset 6, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2Tdiff_sigma&amp;lambda-split-2510_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;24: Inferred trajectories for dataset 6, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-bifurcation_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;25: Balanced 5D multi (bifurcation): dataset 7 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-bifurcation_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;26: Inferred distributions for dataset 7, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-bifurcation_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;27: Inferred trajectories for dataset 7, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-bifurcation_baseline_bifurcation.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;28: Inferred terminal fates for dataset 7, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian5D-multimarginal2T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;29: Unbalanced 5D multi: dataset 8 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D-multimarginal2T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;30: Inferred distributions for dataset 8, with same configuration as the balanced case..
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D-multimarginal2T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;31: Inferred trajectories for dataset 8, with same configuration as the balanced case..
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D-multimarginal2T-growth_stop-4167" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D-multimarginal2T-growth_stop-4167-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth_stop-4167_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D-multimarginal2T-growth_stop-4167-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;32: Inferred distributions for dataset 8, with <span class="math inline">\(\sigma\)</span> update schedule stopping when <span class="math inline">\(\sigma &lt; 0.45\)</span>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D-multimarginal2T-growth_stop-4167" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D-multimarginal2T-growth_stop-4167-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth_stop-4167_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D-multimarginal2T-growth_stop-4167-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;33: Inferred trajectories for dataset 8, with <span class="math inline">\(\sigma\)</span> update schedule stopping when <span class="math inline">\(\sigma &lt; 0.45\)</span>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-data_Gaussian5D-multimarginal2T-growth2_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth2_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;34: Unbalanced 5D multi: dataset 9 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_Gaussian5D-multimarginal2T-growth2_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth2_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;35: Inferred distributions for dataset 9, with same configuration as the balanced case..
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_Gaussian5D-multimarginal2T-growth2_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian5D-multimarginal2T-growth2_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;36: Inferred trajectories for dataset 9, with same configuration as the balanced case..
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-data_Gaussian10D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D_baseline_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;37: Balanced 10D single: dataset 10 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-samples_Gaussian10D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D_baseline_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38: Inferred distributions for dataset 10, with default configuration.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-trajectories_Gaussian10D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D_baseline_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39: Inferred trajectories for dataset 10, with default configuration.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-samples_Gaussian10D_lambda" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian10D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D_lambda_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian10D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;40: Inferred distributions for dataset 10, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-trajectories_Gaussian10D_lambda" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian10D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D_lambda_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian10D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;41: Inferred trajectories for dataset 10, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-data_Gaussian10D-multimarginal2Tdiff_sigma-1530" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D-multimarginal2Tdiff_sigma-1530_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;42: Balanced 10D multi: dataset 11 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-samples_Gaussian10D-multimarginal2Tdiff_sigma-1530" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D-multimarginal2Tdiff_sigma-1530_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;43: Inferred distributions for dataset 11, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-trajectories_Gaussian10D-multimarginal2Tdiff_sigma-1530" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D-multimarginal2Tdiff_sigma-1530_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;44: Inferred trajectories for dataset 11, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-data_Gaussian10D-multimarginal2T-growth_baseline-3073" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D-multimarginal2T-growth_baseline-3073_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;45: Unbalanced 10D multi: dataset 12 of Table <a href="#tbl-datasets" class="quarto-xref">Table&nbsp;1</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-samples_Gaussian10D-multimarginal2T-growth_baseline-3073" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D-multimarginal2T-growth_baseline-3073_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;46: Inferred distributions for dataset 12, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-trajectories_Gaussian10D-multimarginal2T-growth_baseline-3073" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/Gaussian10D-multimarginal2T-growth_baseline-3073_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;47: Inferred trajectories for dataset 12, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+<div id="fig-data_EMT_default" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data_EMT_default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/EMT_default_data.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data_EMT_default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;48: EMT dataset.
+</figcaption>
+</figure>
+</div>
+<div id="fig-samples_EMT_default" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-samples_EMT_default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/EMT_default_samples.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-samples_EMT_default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;49: Inferred distributions for EMT dataset, with configuration as in original work.
+</figcaption>
+</figure>
+</div>
+<div id="fig-trajectories_EMT_default" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trajectories_EMT_default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<embed src="img/EMT_default_trajectories.pdf" class="img-fluid">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trajectories_EMT_default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;50: Inferred trajectories for EMT dataset, with configuration as in original work.
+</figcaption>
+</figure>
+</div>
+<div style="page-break-after: always;"></div>
+</section>
+<section id="evaluation-metrics-tables" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="evaluation-metrics-tables">Evaluation metrics tables</h2>
+<div id="tbl-metrics_Gaussian2D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3: Distance metrics for dataset 1, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian2D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.2353</td>
+<td style="text-align: center;">5.2105</td>
+<td style="text-align: center;">0.0486</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-bifurcation_Gaussian2D-multimarginal4T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-bifurcation_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4: Fate Probability Accuracy for dataset 2, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-bifurcation_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Metric</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\(FPA_1\)</span></td>
+<td style="text-align: left;">4.0148e-04</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\(FPA_2\)</span></td>
+<td style="text-align: left;">5.4966e-07</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian2D-multimarginal4T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;5: Distance metrics for dataset 2, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian2D-multimarginal4T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.1540</td>
+<td style="text-align: center;">10.1617</td>
+<td style="text-align: center;">0.0437</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">0.1543</td>
+<td style="text-align: center;">0.8958</td>
+<td style="text-align: center;">0.0000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian2D-multimarginal4T_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;6: Distance metrics for dataset 3, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian2D-multimarginal4T_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.1809</td>
+<td style="text-align: center;">35.4193</td>
+<td style="text-align: center;">0.0000</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.25</td>
+<td style="text-align: center;">0.2810</td>
+<td style="text-align: center;">10.0703</td>
+<td style="text-align: center;">0.0640</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">0.3454</td>
+<td style="text-align: center;">3.1831</td>
+<td style="text-align: center;">0.1342</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.75</td>
+<td style="text-align: center;">0.3282</td>
+<td style="text-align: center;">10.3792</td>
+<td style="text-align: center;">0.0752</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian2D-multimarginal4T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;7: Distance metrics for dataset 4, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> and growth enabled.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian2D-multimarginal4T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.3192</td>
+<td style="text-align: center;">34.9577</td>
+<td style="text-align: center;">0.1126</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.25</td>
+<td style="text-align: center;">0.2984</td>
+<td style="text-align: center;">9.2285</td>
+<td style="text-align: center;">0.0826</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">0.3403</td>
+<td style="text-align: center;">2.8786</td>
+<td style="text-align: center;">0.1197</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.75</td>
+<td style="text-align: center;">0.2996</td>
+<td style="text-align: center;">10.7694</td>
+<td style="text-align: center;">0.1071</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian2D-multimarginal4T-growth_no-growth" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian2D-multimarginal4T-growth_no-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;8: Distance metrics for dataset 4, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a> and growth disabled.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian2D-multimarginal4T-growth_no-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.4247</td>
+<td style="text-align: center;">33.7909</td>
+<td style="text-align: center;">0.1384</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.25</td>
+<td style="text-align: center;">0.4421</td>
+<td style="text-align: center;">8.8870</td>
+<td style="text-align: center;">0.1871</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">0.4219</td>
+<td style="text-align: center;">2.7988</td>
+<td style="text-align: center;">0.1880</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.75</td>
+<td style="text-align: center;">0.3440</td>
+<td style="text-align: center;">10.8434</td>
+<td style="text-align: center;">0.0680</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;9: Distance metrics for dataset 5, with default configuration.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">4.5618</td>
+<td style="text-align: center;">21.0480</td>
+<td style="text-align: center;">0.9110</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D_lambda" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;10: Distance metrics for dataset 5, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.6497</td>
+<td style="text-align: center;">0.4853</td>
+<td style="text-align: center;">0.0669</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D-multimarginal2Tdiff_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;11: Distance metrics for dataset 6, with <span class="math inline">\(\lambda = 1e18\)</span>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D-multimarginal2Tdiff_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">23.7240</td>
+<td style="text-align: center;">563.1693</td>
+<td style="text-align: center;">0.8436</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">9.8111</td>
+<td style="text-align: center;">96.4668</td>
+<td style="text-align: center;">0.9139</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;12: Distance metrics for dataset 6, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D-multimarginal2Tdiff_sigma_lambda-split-2510-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">0.8175</td>
+<td style="text-align: center;">0.7791</td>
+<td style="text-align: center;">0.1946</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">0.8086</td>
+<td style="text-align: center;">0.7612</td>
+<td style="text-align: center;">0.2796</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;13: Fate Probability Accuracy for dataset 7, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-bifurcation_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Metric</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\(FPA_1\)</span></td>
+<td style="text-align: left;">5.3000e-03</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\(FPA_2\)</span></td>
+<td style="text-align: left;">1.4000e-01</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D-multimarginal2T-bifurcation_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;14: Distance metrics for dataset 7, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D-multimarginal2T-bifurcation_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">1.0166</td>
+<td style="text-align: center;">1.1985</td>
+<td style="text-align: center;">0.1942</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">0.6640</td>
+<td style="text-align: center;">0.5149</td>
+<td style="text-align: center;">0.0000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D-multimarginal2T-growth_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;15: Distance metrics for dataset 8, with same configuration as the balanced case.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D-multimarginal2T-growth_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">2.0725</td>
+<td style="text-align: center;">4.5593</td>
+<td style="text-align: center;">0.9238</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">2.1092</td>
+<td style="text-align: center;">4.6212</td>
+<td style="text-align: center;">0.9672</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D-multimarginal2T-growth_stop-4167" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D-multimarginal2T-growth_stop-4167-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;16: Distance metrics for dataset 8, with <span class="math inline">\(\sigma\)</span> update schedule stopping when <span class="math inline">\(\sigma &lt; 0.45\)</span>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D-multimarginal2T-growth_stop-4167-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">2.2308</td>
+<td style="text-align: center;">5.2203</td>
+<td style="text-align: center;">0.8288</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">2.4748</td>
+<td style="text-align: center;">6.3282</td>
+<td style="text-align: center;">0.9496</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian5D-multimarginal2T-growth2_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;17: Distance metrics for dataset 9, with same configuration as the balanced case.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian5D-multimarginal2T-growth2_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">2.9459</td>
+<td style="text-align: center;">8.9509</td>
+<td style="text-align: center;">1.0213</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">1.7654</td>
+<td style="text-align: center;">3.3216</td>
+<td style="text-align: center;">0.8930</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian10D_baseline" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;18: Distance metrics for dataset 10, with default configuration.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian10D_baseline-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">9.5352</td>
+<td style="text-align: center;">91.3937</td>
+<td style="text-align: center;">0.6041</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian10D_lambda" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian10D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;19: Distance metrics for dataset 10, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian10D_lambda-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">1.3024</td>
+<td style="text-align: center;">1.8066</td>
+<td style="text-align: center;">0.0905</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian10D-multimarginal2Tdiff_sigma-1530" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;20: Distance metrics for dataset 11, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian10D-multimarginal2Tdiff_sigma-1530-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">1.2708</td>
+<td style="text-align: center;">1.7102</td>
+<td style="text-align: center;">0.1032</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">1.1648</td>
+<td style="text-align: center;">1.4541</td>
+<td style="text-align: center;">0.0632</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="tbl-metrics_Gaussian10D-multimarginal2T-growth_baseline-3073" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-metrics_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;21: Distance metrics for dataset 12, with configuration of Table <a href="#tbl-lambda_sigma" class="quarto-xref">Table&nbsp;2</a>.
+</figcaption>
+<div aria-describedby="tbl-metrics_Gaussian10D-multimarginal2T-growth_baseline-3073-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Timepoint</th>
+<th style="text-align: center;">EMD</th>
+<th style="text-align: center;">W2</th>
+<th style="text-align: center;">MMD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0.00</td>
+<td style="text-align: center;">1.4703</td>
+<td style="text-align: center;">2.3038</td>
+<td style="text-align: center;">0.2762</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">0.50</td>
+<td style="text-align: center;">1.7743</td>
+<td style="text-align: center;">3.2884</td>
+<td style="text-align: center;">0.4742</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
